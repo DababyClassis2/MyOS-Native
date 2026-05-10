@@ -1,109 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>YOS Audit Log</title>
-    <link rel="stylesheet" href="../assets/module-style.css">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: rgba(20, 20, 20, 0.95);
-            color: #ffffff;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border-radius: 10px;
-        }
 
-        #log-content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
+<style>
+.audit-wrap { font-family: var(--font-mono, monospace); padding: 1rem 0; }
+.section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.5rem 0 0.5rem; }
+.audit-row { display: grid; grid-template-columns: 200px 80px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+.audit-row:last-child { border-bottom: none; }
+.item-name { color: var(--color-text-primary); font-weight: 500; }
+.badge { display: inline-flex; align-items: center; justify-content: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; letter-spacing: 0.03em; white-space: nowrap; }
+.b-ok     { background: var(--color-background-success); color: var(--color-text-success); }
+.b-warn   { background: var(--color-background-warning); color: var(--color-text-warning); }
+.b-crit   { background: var(--color-background-danger);  color: var(--color-text-danger);  }
+.b-info   { background: var(--color-background-info);    color: var(--color-text-info);    }
+.b-grey   { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.note { color: var(--color-text-secondary); font-size: 12px; line-height: 1.5; }
+.score-row { display: flex; gap: 16px; flex-wrap: wrap; margin: 1rem 0; }
+.score-card { flex: 1; min-width: 120px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 16px; }
+.score-num { font-size: 28px; font-weight: 500; color: var(--color-text-primary); }
+.score-label { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.bar-wrap { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+.bar-bg { flex: 1; height: 6px; background: var(--color-border-tertiary); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.bar-label { font-size: 12px; color: var(--color-text-secondary); min-width: 100px; }
+.bar-pct { font-size: 12px; color: var(--color-text-primary); font-weight: 500; min-width: 30px; text-align: right; }
+</style>
+<div class="audit-wrap">
 
-        .log-entry {
-            padding: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 12px;
-            display: grid;
-            grid-template-columns: 150px 100px 150px 1fr;
-            gap: 15px;
-            align-items: center;
-        }
+<div class="score-row">
+  <div class="score-card">
+    <div class="score-num">61<span style="font-size:16px;color:var(--color-text-secondary)">/100</span></div>
+    <div class="score-label">Overall build score</div>
+  </div>
+  <div class="score-card">
+    <div class="score-num" style="color:var(--color-text-danger)">3</div>
+    <div class="score-label">Critical issues</div>
+  </div>
+  <div class="score-card">
+    <div class="score-num" style="color:var(--color-text-warning)">7</div>
+    <div class="score-label">Warnings</div>
+  </div>
+  <div class="score-card">
+    <div class="score-num" style="color:var(--color-text-success)">5</div>
+    <div class="score-label">Confirmed solid</div>
+  </div>
+</div>
 
-        .log-entry:hover { background: rgba(255, 255, 255, 0.03); }
+<div class="bar-wrap"><span class="bar-label">Architecture</span><div class="bar-bg"><div class="bar-fill" style="width:50%;background:#E24B4A"></div></div><span class="bar-pct">50%</span></div>
+<div class="bar-wrap"><span class="bar-label">Security model</span><div class="bar-bg"><div class="bar-fill" style="width:65%;background:#BA7517"></div></div><span class="bar-pct">65%</span></div>
+<div class="bar-wrap"><span class="bar-label">Data layer</span><div class="bar-bg"><div class="bar-fill" style="width:70%;background:#BA7517"></div></div><span class="bar-pct">70%</span></div>
+<div class="bar-wrap"><span class="bar-label">Module system</span><div class="bar-bg"><div class="bar-fill" style="width:75%;background:#639922"></div></div><span class="bar-pct">75%</span></div>
+<div class="bar-wrap"><span class="bar-label">Dev toolchain</span><div class="bar-bg"><div class="bar-fill" style="width:30%;background:#E24B4A"></div></div><span class="bar-pct">30%</span></div>
+<div class="bar-wrap"><span class="bar-label">Documentation</span><div class="bar-bg"><div class="bar-fill" style="width:90%;background:#639922"></div></div><span class="bar-pct">90%</span></div>
 
-        .ts { color: #888; }
-        .module { color: var(--accent-color); font-weight: bold; }
-        .action { color: #fff; }
-        .detail { color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+<div class="section-title">Critical — must fix before any new features</div>
 
-        .severity-INFO { border-left: 3px solid #2ecc71; }
-        .severity-WARN { border-left: 3px solid #f1c40f; }
-        .severity-ERROR { border-left: 3px solid #e74c3c; }
+<div class="audit-row">
+  <span class="item-name">Tauri version</span>
+  <span class="badge b-crit">CRITICAL</span>
+  <span class="note">Spec says "Tauri v1". All documentation, capability system, plugin APIs, and the IPC model are built on v2. V1 is deprecated. Decision required now.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">Hardcoded sandbox path</span>
+  <span class="badge b-crit">CRITICAL</span>
+  <span class="note">Sandbox root is <code>D:/My-Os-Project</code> — a Windows dev machine path baked into the binary. Breaks on every other machine and every Linux deploy.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">AI module in spec</span>
+  <span class="badge b-crit">CRITICAL</span>
+  <span class="note">AI module listed in module table with <code>QueryAI</code> permission. Architecture doc says AI layer is disabled until Phase 5. If code exists, it must be gated or removed.</span>
+</div>
 
-        .header-row {
-            background: rgba(255, 255, 255, 0.05);
-            font-weight: bold;
-            padding: 10px;
-            font-size: 13px;
-            display: grid;
-            grid-template-columns: 150px 100px 150px 1fr;
-            gap: 15px;
-        }
-    </style>
-</head>
-<body>
-    <div class="title-bar">
-        <div class="traffic-lights">
-            <div class="traffic-light close" onclick="window.close()"></div>
-            <div class="traffic-light minimize"></div>
-            <div class="traffic-light maximize"></div>
-        </div>
-        <div class="title-text">Audit Log Viewer</div>
-    </div>
+<div class="section-title">Warnings — fix in Phase 3 cleanup sprint</div>
 
-    <div class="header-row">
-        <span>Timestamp</span>
-        <span>Module</span>
-        <span>Action</span>
-        <span>Details</span>
-    </div>
+<div class="audit-row">
+  <span class="item-name">Permission naming drift</span>
+  <span class="badge b-warn">WARNING</span>
+  <span class="note">Spec uses <code>ExecCommand</code>, <code>ListDir</code>, <code>ReadFile</code>, <code>WriteAudit</code>. Docs use <code>ExecWrite</code>, <code>FileRead</code>, <code>AuditRead</code>. One of these is wrong. Causes silent guard bypasses if mismatched.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">No WAL mode mentioned</span>
+  <span class="badge b-warn">WARNING</span>
+  <span class="note">SQLite schema exists but no WAL mode. Activity Monitor polling + Notes auto-save will deadlock each other under concurrent writes without it.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">No tauri-specta</span>
+  <span class="badge b-warn">WARNING</span>
+  <span class="note">Frontend types written manually. At 20+ commands this becomes unmaintainable. One Rust signature change silently breaks the frontend with no compile error.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">No Cargo workspace</span>
+  <span class="badge b-warn">WARNING</span>
+  <span class="note">All Rust in one crate. Business logic, DB queries, and security are tangled. Untestable in isolation. Will cause pain when Privacy Shield becomes a separate binary.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">No Tauri capabilities</span>
+  <span class="badge b-warn">WARNING</span>
+  <span class="note">V2 requires <code>capabilities/*.json</code> per window to whitelist commands. Without them, all commands are blocked at the framework level (v2 behaviour). This might explain dev pain.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">Phase 3 "complete" claim</span>
+  <span class="badge b-warn">WARNING</span>
+  <span class="note">Marked complete but spec has no mention of FTS5, workspace state persistence, profile system, or tauri-specta — all Phase 3 items. Partially complete is more accurate.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">Gemini-generated spec</span>
+  <span class="badge b-warn">WARNING</span>
+  <span class="note">Footer: "Generated by Gemini CLI". Spec may describe intended state, not actual code state. Verify every claim against the actual <code>src-tauri/src/</code> files before planning Phase 4.</span>
+</div>
 
-    <div id="log-content">
-        <!-- Logs injected here -->
-    </div>
+<div class="section-title">Confirmed solid — do not change</div>
 
-    <script>
-        const { invoke } = window.__TAURI__.tauri;
-        const moduleId = 'desktop'; // Usually desktop or system logs module
+<div class="audit-row">
+  <span class="item-name">Core architecture layers</span>
+  <span class="badge b-ok">SOLID</span>
+  <span class="note">5-layer model (Alpine → Gateway → SQLite → UI) is correctly defined and matches the full architecture docs.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">AppState pattern</span>
+  <span class="badge b-ok">SOLID</span>
+  <span class="note"><code>Arc&lt;Mutex&lt;T&gt;&gt;</code> state management is the correct Tauri pattern. Confirmed present.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">Permission Guard concept</span>
+  <span class="badge b-ok">SOLID</span>
+  <span class="note">Guard is implemented and used. Naming issues aside, the concept and enforcement pattern is correct.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">Audit log schema</span>
+  <span class="badge b-ok">SOLID</span>
+  <span class="note">Immutable audit trail with correct columns. Matches spec exactly.</span>
+</div>
+<div class="audit-row">
+  <span class="item-name">SQLite persistence</span>
+  <span class="badge b-ok">SOLID</span>
+  <span class="note">On-disk vs in-memory switch for Amnesic Mode is architecturally correct. Foundation is right.</span>
+</div>
 
-        async function loadLogs() {
-            try {
-                // We'll use moduleId 'desktop' because it has QueryAudit permission
-                const logs = await invoke('query_audit', { moduleId, limit: 100 });
-                const content = document.getElementById('log-content');
-                content.innerHTML = logs.map(log => {
-                    const date = new Date(log.ts * 1000).toLocaleString();
-                    return `
-                        <div class="log-entry severity-${log.severity}">
-                            <span class="ts">${date}</span>
-                            <span class="module">${log.module_id}</span>
-                            <span class="action">${log.action}</span>
-                            <span class="detail" title="${log.detail || ''}">${log.detail || '-'}</span>
-                        </div>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        setInterval(loadLogs, 5000);
-        loadLogs();
-    </script>
-</body>
-</html>
+</div>

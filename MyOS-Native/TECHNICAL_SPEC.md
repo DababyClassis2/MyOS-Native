@@ -105,7 +105,7 @@ const output = await invoke('exec_command', {
 
 ## 8. Current Progress (Roadmap)
 *   **Phase 1 & 2:** Complete (Foundation & Core Modules).
-*   **Phase 3:** Complete (Data Core, SQLite, Permission Guard, Audit Logging).
+*   **Phase 3:** 🔶 In Progress (Security foundation and persistence complete; UI modules and type-safety automation pending).
 *   **Phase 4:** Planned (Amnesic Mode, Package Installer, Wallpaper Theming).
 
 ---

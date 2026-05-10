@@ -20,6 +20,9 @@ pub async fn query_assistant(
         return Err(e);
     }
 
+    // 0. Explicit Phase 5 Gate
+    return Err("AI Layer is currently disabled. Requirements: Phase 5 (Privacy Shield) completion and independent security audit.".to_string());
+
     let _ = record_audit(&state, &module_id, "AI_QUERY", Some(format!("Prompt: {}", prompt)), "INFO");
     
     // 1. Verify Privacy Shield requirement

@@ -47,28 +47,21 @@ pub struct ModuleManifest {
 
 ```rust
 pub enum Permission {
-    // Execution
-    ExecRead,         // receive exec output
-    ExecWrite,        // run whitelisted exec commands
-
-    // File system
-    FileRead,         // read files within allowed roots
-    FileWrite,        // write files within allowed roots
-    FileWatch,        // watch for file system changes
-
-    // Clipboard
-    ClipboardRead,
-    ClipboardWrite,
-
-    // System
-    SystemMonitor,    // read CPU, RAM, disk, process list
-    NetworkRead,      // read network interface state
-    NetworkControl,   // change network settings (elevated — trusted only)
-
-    // Data
-    AuditRead,        // query the audit log
-    PackageInstall,   // install .yops packages (elevated — trusted only)
-    PrivacyControl,   // control Privacy Shield (elevated — trusted only)
+    ExecCommand,      // run whitelisted exec commands
+    ListDir,          // list directories within sandbox
+    ReadFile,         // read files within sandbox
+    GetSystemHealth,  // read CPU, RAM, disk, process list
+    GetSetting,       // read a setting
+    SetSetting,       // write a setting
+    ListSettings,     // list all settings
+    ListNotes,        // list user notes
+    SaveNote,         // create or update a note
+    DeleteNote,       // delete a note
+    SearchNotes,      // full-text search notes
+    OpenModule,       // spawn a new module window
+    WriteAudit,       // write to the audit log
+    QueryAudit,       // query the audit log
+    QueryAI,          // query the AI assistant (Phase 5+)
 }
 ```
 
@@ -78,59 +71,50 @@ pub enum Permission {
 
 ### Terminal
 ```
-ID:          com.yfitops.terminal
-Permissions: ExecWrite, ExecRead, AuditRead
+ID:          terminal
+Permissions: ExecCommand, GetSystemHealth, WriteAudit
 Trusted:     true
 ```
 
 ### File Browser
 ```
-ID:          com.yfitops.files
-Permissions: FileRead, FileWrite, FileWatch
+ID:          files
+Permissions: ListDir, ReadFile, WriteAudit
 Trusted:     true
 ```
 
 ### Activity Monitor
 ```
-ID:          com.yfitops.monitor
-Permissions: SystemMonitor, NetworkRead
+ID:          activity
+Permissions: GetSystemHealth, WriteAudit
 Trusted:     true
 ```
 
 ### Notes
 ```
-ID:          com.yfitops.notes
-Permissions: FileRead (for import/export only)
-Trusted:     true
-Note:        Notes are stored in SQLite — no FileWrite needed for normal ops
-```
-
-### Clipboard
-```
-ID:          com.yfitops.clipboard
-Permissions: ClipboardRead, ClipboardWrite
+ID:          notes
+Permissions: ListNotes, SaveNote, DeleteNote, SearchNotes, WriteAudit
 Trusted:     true
 ```
 
 ### Settings
 ```
-ID:          com.yfitops.settings
-Permissions: FileRead, NetworkRead, PrivacyControl
-Trusted:     true
-Note:        No FileWrite — settings are stored in SQLite
-```
-
-### Log Viewer
-```
-ID:          com.yfitops.logs
-Permissions: AuditRead
+ID:          settings
+Permissions: ListSettings, GetSetting, SetSetting, WriteAudit
 Trusted:     true
 ```
 
-### Package Manager
+### Audit Logs
 ```
-ID:          com.yfitops.packages
-Permissions: PackageInstall, FileRead
+ID:          logs
+Permissions: QueryAudit, WriteAudit
+Trusted:     true
+```
+
+### Desktop Shell
+```
+ID:          desktop
+Permissions: GetSystemHealth, OpenModule, GetSetting, SetSetting, WriteAudit, QueryAudit
 Trusted:     true
 ```
 

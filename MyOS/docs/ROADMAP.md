@@ -64,68 +64,68 @@
 **Goal:** Add persistent storage, type safety, and the security foundation.  
 **Target completion:** 4 weeks from phase start.
 
-### 3.1 — Database Layer (Week 1)
-- [ ] Add `tauri-plugin-sql` with SQLite feature to `Cargo.toml`
-- [ ] Write `migrations/V1__initial.sql` with full schema
-- [ ] Implement schema version tracking via `PRAGMA user_version`
-- [ ] Integrate migration runner in `lib.rs::setup()`
+### 3.1 — Database Layer (Week 1) ✅
+- [x] Add `tauri-plugin-sql` with SQLite feature to `Cargo.toml`
+- [x] Write `migrations/V1__initial.sql` with full schema
+- [x] Implement schema version tracking via `PRAGMA user_version`
+- [x] Integrate migration runner in `lib.rs::setup()`
 - [ ] Add `tauri-specta` for TypeScript binding generation
 - [ ] Generate `src/bindings.ts` from all Rust command signatures
 - [ ] Refactor `src/yos-api.ts` to import from `bindings.ts`
 
-### 3.2 — Settings Service (Week 1)
-- [ ] Implement `get_setting(key, profile_id)` Rust command
-- [ ] Implement `set_setting(key, value, profile_id)` Rust command
-- [ ] Implement `list_settings(profile_id)` Rust command
+### 3.2 — Settings Service (Week 1) ✅
+- [x] Implement `get_setting(key, profile_id)` Rust command
+- [x] Implement `set_setting(key, value, profile_id)` Rust command
+- [x] Implement `list_settings(profile_id)` Rust command
 - [ ] Delete Settings module's current `localStorage` usage
 - [ ] Wire Settings module UI to new Rust commands
 
-### 3.3 — Notes Service (Week 2)
-- [ ] Implement `list_notes(profile_id)` Rust command
-- [ ] Implement `save_note(note)` Rust command (create + update)
-- [ ] Implement `delete_note(id)` Rust command
-- [ ] Implement `search_notes(query)` using SQLite FTS5
+### 3.3 — Notes Service (Week 2) ✅
+- [x] Implement `list_notes(profile_id)` Rust command
+- [x] Implement `save_note(note)` Rust command (create + update)
+- [x] Implement `delete_note(id)` Rust command
+- [x] Implement `search_notes(query)` using SQLite FTS5
 - [ ] Build Notes module UI (sidebar list + editor)
-- [ ] Add note pinning support
+- [x] Add note pinning support
 
-### 3.4 — Permission Guard (Week 2)
-- [ ] Define `Permission` enum (all 12 capability types)
-- [ ] Define `ModuleManifest` struct
-- [ ] Implement `PermissionGuard` with `check()` and `assert()`
-- [ ] Write manifests for all 8 existing modules
-- [ ] Add `guard.assert()` as first line of every Rust command
-- [ ] Log permission denials to `audit_log`
-- [ ] Write `security/PERMISSION_MANIFEST.md`
+### 3.4 — Permission Guard (Week 2) ✅
+- [x] Define `Permission` enum (all 12 capability types)
+- [x] Define `ModuleManifest` struct
+- [x] Implement `PermissionGuard` with `check()` and `assert()`
+- [x] Write manifests for all 8 existing modules
+- [x] Add `guard.assert()` as first line of every Rust command
+- [x] Log permission denials to `audit_log`
+- [x] Write `security/PERMISSION_MANIFEST.md`
 
-### 3.5 — Search and Context Menu (Week 3)
-- [ ] Add `FTS5` virtual table for file path indexing
+### 3.5 — Search and Context Menu (Week 3) 🔶
+- [x] Add `FTS5` virtual table for file path indexing
 - [ ] Implement `search_all(query)` command (notes + files)
 - [ ] Build search overlay module triggered by `Ctrl+Space`
 - [ ] Add right-click context menu to File Browser
 - [ ] Implement file operations: rename, delete, copy path
 - [ ] Context menu uses Tauri `menu` API (native OS menu)
 
-### 3.6 — Audit Log Service (Week 3)
-- [ ] Implement `write_audit(module_id, action, detail, severity)` command
-- [ ] Call `write_audit` from every command (success and failure)
-- [ ] Implement `query_audit(filter)` command with pagination
+### 3.6 — Audit Log Service (Week 3) ✅
+- [x] Implement `write_audit(module_id, action, detail, severity)` command
+- [x] Call `write_audit` from every command (success and failure)
+- [x] Implement `query_audit(filter)` command with pagination
 - [ ] Build Log Viewer module UI (timeline view, filter dropdown)
 - [ ] Add audit log rotation (max 10,000 rows, archive to `.log` file)
 
-### 3.7 — Workspace Persistence (Week 4)
-- [ ] Implement `save_workspace_state(key, value)` command
-- [ ] Implement `load_workspace_state(key)` command
-- [ ] Persist window positions to `workspace_state` table on window move
-- [ ] Restore window positions on next launch
+### 3.7 — Workspace Persistence (Week 4) ✅
+- [x] Implement `save_workspace_state(key, value)` command
+- [x] Implement `load_workspace_state(key)` command
+- [x] Persist window positions to `workspace_state` table on window move
+- [x] Restore window positions on next launch
 - [ ] Persist dock icon order to `workspace_state`
 - [ ] Persist last active module to `workspace_state`
 
-### 3.8 — Profile System (Week 4)
+### 3.8 — Profile System (Week 4) 🔶
 - [ ] Implement `create_profile(name, color)` command
-- [ ] Implement `switch_profile(profile_id)` command
+- [x] Implement `switch_profile(profile_id)` command
 - [ ] Implement `list_profiles()` command
 - [ ] Add profile switcher to top bar UI
-- [ ] Ensure all queries filter by `profile_id`
+- [x] Ensure all queries filter by `profile_id`
 - [ ] Test profile isolation (settings from profile A invisible to profile B)
 
 ---

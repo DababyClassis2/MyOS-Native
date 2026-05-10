@@ -179,9 +179,9 @@ Do not work on anything in Phase 4 (Privacy Shield, AI Layer) until Phase 3 is c
 | Module | A standalone HTML page loaded in a native Tauri window |
 | Command | A Rust function exposed to the frontend via `#[tauri::command]` |
 | Manifest | A `ModuleManifest` struct defining a module's declared permissions |
-| Permission | A capability enum value (`ExecWrite`, `FileRead`, etc.) |
+| Permission | A capability enum value (`ExecCommand`, `ListDir`, etc.) |
 | Sovereign Mode | Session with full SQLite persistence |
 | Amnesic Mode | Session with in-memory SQLite only, wipes on exit |
 | .yops | The Yfitops package format (JSON manifest + zipped module) |
-| Guard | The `PermissionGuard::assert()` call at the top of every command |
+| Guard | The `PermissionGuard::assert_capability()` call at the top of every command |
 | import.txt | The master deployment file — source of truth for all system state |

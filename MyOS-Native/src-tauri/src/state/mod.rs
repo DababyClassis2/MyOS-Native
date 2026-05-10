@@ -118,7 +118,7 @@ impl PermissionGuard {
 
         PermissionGuard { 
             manifests,
-            sandbox_root: "D:/My-Os-Project".to_string(),
+            sandbox_root: std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")).to_string_lossy().to_string(),
         }
     }
 
