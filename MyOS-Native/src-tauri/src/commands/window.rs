@@ -1,4 +1,4 @@
-use tauri::{command, State, Window, WindowBuilder, WindowUrl};
+use tauri::{command, State, Window, WindowBuilder, WindowUrl, Manager};
 use crate::state::{AppState, Permission};
 
 #[command]

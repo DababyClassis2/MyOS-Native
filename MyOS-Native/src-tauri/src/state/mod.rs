@@ -154,7 +154,7 @@ pub struct AppState {
     pub active_profile:   Arc<Mutex<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum SessionMode { Sovereign, Amnesic }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -165,6 +165,12 @@ pub struct WorkspaceState {
     pub open_modules: HashMap<String, String>,
     pub focus_mode:   bool,
     pub active_theme: ThemePalette,
+}
+
+#[derive(Serialize)]
+pub struct SettingEntry {
+    pub key: String,
+    pub value: String,
 }
 
 impl AppState {
