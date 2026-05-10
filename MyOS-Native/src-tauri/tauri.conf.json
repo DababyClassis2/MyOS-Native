@@ -16,7 +16,8 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.yfitops.os"
+      "identifier": "com.yfitops.os",
+      "icon": []
     },
     "windows": [
       {
