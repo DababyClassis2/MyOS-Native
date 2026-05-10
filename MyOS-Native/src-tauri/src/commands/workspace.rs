@@ -3,7 +3,7 @@ use crate::state::{AppState, Permission};
 
 #[command]
 pub fn save_workspace_state(
-    module_id: String,
+    _module_id: String,
     key: String,
     value: String,
     state: State<'_, AppState>,

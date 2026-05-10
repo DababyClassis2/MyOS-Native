@@ -49,7 +49,7 @@ pub fn get_privacy_heatmap(
 #[command]
 pub fn toggle_network_guardian(
     module_id: String,
-    active: bool,
+    _active: bool,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     state.permission_guard.assert_capability(&module_id, Permission::SetSetting)?;

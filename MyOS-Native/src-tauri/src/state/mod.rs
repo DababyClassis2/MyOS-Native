@@ -168,6 +168,7 @@ pub struct WorkspaceState {
 }
 
 #[derive(Serialize)]
+#[allow(dead_code)]
 pub struct SettingEntry {
     pub key: String,
     pub value: String,

@@ -7,7 +7,6 @@ mod db;
 
 use crate::state::AppState;
 use crate::commands::{window, health, terminal, files, settings, logs, notes, workspace, session, theme, packages, privacy, ai};
-use std::path::PathBuf;
 
 fn main() {
     // Database Initialization

@@ -1,11 +1,10 @@
 use tauri::{command, State, AppHandle, Manager};
 use crate::state::{AppState, ThemePalette, Permission};
-use serde::Serialize;
 
 #[command]
 pub fn set_wallpaper(
     module_id: String,
-    path: String,
+    _path: String,
     state: State<'_, AppState>,
     app_handle: AppHandle,
 ) -> Result<ThemePalette, String> {
