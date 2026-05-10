@@ -9,12 +9,11 @@ pub fn save_workspace_state(
     value: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
-        let _ = record_audit(&state, &module_id, "SAVE_WORKSPACE_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataWrite) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataWrite. Error: {}", e)), "WARN");
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "SAVE_WORKSPACE", Some(format!("Key: {}", key)), "INFO");
     let db = state.db.lock().unwrap();
     db.execute(
         "INSERT INTO workspace_state (key, value) VALUES (?, ?)
@@ -31,8 +30,8 @@ pub fn load_workspace_state(
     key: String,
     state: State<'_, AppState>,
 ) -> Result<Option<String>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSetting) {
-        let _ = record_audit(&state, &module_id, "LOAD_WORKSPACE_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataRead. Error: {}", e)), "WARN");
         return Err(e);
     }
 
@@ -56,8 +55,8 @@ pub fn toggle_focus_mode(
     state: State<'_, AppState>,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
-        let _ = record_audit(&state, &module_id, "TOGGLE_FOCUS_DENIED", Some(e.clone()), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataWrite) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataWrite. Error: {}", e)), "WARN");
         return Err(e);
     }
 
@@ -65,7 +64,6 @@ pub fn toggle_focus_mode(
     workspace.focus_mode = !workspace.focus_mode;
     
     let is_active = workspace.focus_mode;
-    let _ = record_audit(&state, &module_id, "TOGGLE_FOCUS", Some(format!("Active: {}", is_active)), "INFO");
     
     // Emit event to all windows
     app_handle.emit_all("workspace:focus_mode_changed", is_active).map_err(|e| e.to_string())?;

@@ -11,11 +11,10 @@ pub async fn open_module(
 ) -> Result<(), String> {
     // Strict contract check
     if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::OpenModule) {
-        let _ = record_audit(&state, &module_id, "OPEN_MODULE_DENIED", Some(format!("Target: {}. Error: {}", target_module_id, e)), "WARN");
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: OpenModule. Error: {}", e)), "WARN");
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "OPEN_MODULE", Some(format!("Target: {}", target_module_id)), "INFO");
     let mut workspace = state.workspace.lock().unwrap();
     
     // Check if already open

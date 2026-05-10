@@ -31,12 +31,11 @@ pub struct SystemHealth {
 
 #[command]
 pub fn get_system_health(module_id: String, state: State<'_, AppState>) -> Result<SystemHealth, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSystemHealth) {
-        let _ = record_audit(&state, &module_id, "HEALTH_DENIED", Some(e.clone()), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SystemMonitor) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: SystemMonitor. Error: {}", e)), "WARN");
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "HEALTH_CHECK", None, "INFO");
     let mut sys = System::new_all();
     sys.refresh_all();
     

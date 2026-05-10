@@ -17,12 +17,10 @@ pub fn list_notes(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<Note>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ListNotes) {
-        let _ = record_audit(&state, &module_id, "LIST_NOTES_DENIED", Some(e.clone()), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataRead. Error: {}", e)), "WARN");
         return Err(e);
     }
-
-    let _ = record_audit(&state, &module_id, "LIST_NOTES", None, "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
@@ -53,21 +51,21 @@ pub fn save_note(
     note: Note,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SaveNote) {
-        let _ = record_audit(&state, &module_id, "SAVE_NOTE_DENIED", Some(format!("Title: {}. Error: {}", note.title, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataWrite) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataWrite. Error: {}", e)), "WARN");
         return Err(e);
     }
-
-    let _ = record_audit(&state, &module_id, "SAVE_NOTE", Some(format!("Title: {}", note.title)), "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
 
-    let id = if note.id.is_empty() {
-        Uuid::new_v4().to_string()
+    let (id, action) = if note.id.is_empty() {
+        (Uuid::new_v4().to_string(), "notes:created")
     } else {
-        note.id
+        (note.id, "notes:updated")
     };
+
+    let _ = record_audit(&state, &module_id, action, Some(format!("Note ID: {}, Title: {}", id, note.title)), "INFO");
 
     db.execute(
         "INSERT INTO notes (id, title, body, is_pinned, profile_id, updated_at, created_at) 
@@ -89,12 +87,13 @@ pub fn delete_note(
     id: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DeleteNote) {
-        let _ = record_audit(&state, &module_id, "DELETE_NOTE_DENIED", Some(format!("ID: {}. Error: {}", id, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataWrite) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataWrite. Error: {}", e)), "WARN");
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "DELETE_NOTE", Some(format!("ID: {}", id)), "INFO");
+    let _ = record_audit(&state, &module_id, "notes:deleted", Some(format!("Note ID: {}", id)), "WARN");
+
     let db = state.db.lock().unwrap();
     db.execute("DELETE FROM notes WHERE id = ?", [id]).map_err(|e| e.to_string())?;
     Ok(())
@@ -106,12 +105,10 @@ pub fn search_notes(
     query: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<Note>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SearchNotes) {
-        let _ = record_audit(&state, &module_id, "SEARCH_NOTES_DENIED", Some(format!("Query: {}. Error: {}", query, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataRead. Error: {}", e)), "WARN");
         return Err(e);
     }
-
-    let _ = record_audit(&state, &module_id, "SEARCH_NOTES", Some(format!("Query: {}", query)), "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();

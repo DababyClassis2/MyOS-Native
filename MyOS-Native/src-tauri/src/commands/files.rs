@@ -18,23 +18,20 @@ pub fn list_dir(
     state: State<'_, AppState>,
 ) -> Result<Vec<FileEntry>, String> {
     // 1. Strict contract check
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ListDir) {
-        let _ = record_audit(&state, &module_id, "LIST_DIR_DENIED", Some(format!("Path: {}. Error: {}", path, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::FileRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: FileRead. Error: {}", e)), "WARN");
         return Err(e);
     }
 
     // 2. Sandbox enforcement
     if let Err(e) = state.permission_guard.assert_path_in_sandbox(&path) {
-        let _ = record_audit(&state, &module_id, "SANDBOX_VIOLATION", Some(format!("Path: {}. Error: {}", path, e)), "ERROR");
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Sandbox violation: {}", e)), "ERROR");
         return Err(e);
     }
 
     // 3. Execution
-    let _ = record_audit(&state, &module_id, "LIST_DIR", Some(format!("Path: {}", path)), "INFO");
-    let entries = fs::read_dir(&path).map_err(|e| {
-        let _ = record_audit(&state, &module_id, "LIST_DIR_ERROR", Some(format!("Path: {}. Error: {}", path, e)), "ERROR");
-        e.to_string()
-    })?;
+    let _ = record_audit(&state, &module_id, "files:list", Some(path.clone()), "INFO");
+    let entries = fs::read_dir(&path).map_err(|e| e.to_string())?;
     let mut files = Vec::new();
 
     for entry in entries {
@@ -57,19 +54,16 @@ pub fn read_text_file(
     path: String,
     state: State<'_, AppState>,
 ) -> Result<String, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ReadFile) {
-        let _ = record_audit(&state, &module_id, "READ_FILE_DENIED", Some(format!("Path: {}. Error: {}", path, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::FileRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: FileRead. Error: {}", e)), "WARN");
         return Err(e);
     }
     
     if let Err(e) = state.permission_guard.assert_path_in_sandbox(&path) {
-        let _ = record_audit(&state, &module_id, "SANDBOX_VIOLATION", Some(format!("Path: {}. Error: {}", path, e)), "ERROR");
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Sandbox violation: {}", e)), "ERROR");
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "READ_FILE", Some(format!("Path: {}", path)), "INFO");
-    fs::read_to_string(&path).map_err(|e| {
-        let _ = record_audit(&state, &module_id, "READ_FILE_ERROR", Some(format!("Path: {}. Error: {}", path, e)), "ERROR");
-        e.to_string()
-    })
+    let _ = record_audit(&state, &module_id, "files:read", Some(path.clone()), "INFO");
+    fs::read_to_string(path).map_err(|e| e.to_string())
 }

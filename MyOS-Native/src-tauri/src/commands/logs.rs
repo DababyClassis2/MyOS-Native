@@ -20,18 +20,14 @@ pub fn write_audit(
     severity: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    state.permission_guard.assert_capability(&module_id, Permission::WriteAudit)?;
+    // Permission check for external modules wanting to log
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataWrite) {
+        // Internal logging of the denial
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataWrite. Error: {}", e)), "WARN");
+        return Err(e);
+    }
 
-    let db = state.db.lock().unwrap();
-    let profile_id = state.active_profile.lock().unwrap();
-
-    db.execute(
-        "INSERT INTO audit_log (module_id, action, detail, severity, profile_id, ts) 
-         VALUES (?, ?, ?, ?, ?, (unixepoch()))",
-        [&module_id, &action, &detail.unwrap_or_default(), &severity, &*profile_id],
-    ).map_err(|e| e.to_string())?;
-
-    Ok(())
+    record_audit(&state, &module_id, &action, detail, &severity)
 }
 
 /// Helper to write audit logs from internal Rust commands
@@ -60,7 +56,10 @@ pub fn query_audit(
     limit: u32,
     state: State<'_, AppState>,
 ) -> Result<Vec<AuditEntry>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::QueryAudit)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::AuditRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: AuditRead. Error: {}", e)), "WARN");
+        return Err(e);
+    }
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();

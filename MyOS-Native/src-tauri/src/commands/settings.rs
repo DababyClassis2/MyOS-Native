@@ -9,8 +9,8 @@ pub fn get_setting(
     key: String,
     state: State<'_, AppState>,
 ) -> Result<Option<String>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSetting) {
-        let _ = record_audit(&state, &module_id, "GET_SETTING_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataRead. Error: {}", e)), "WARN");
         return Err(e);
     }
 
@@ -37,12 +37,12 @@ pub fn set_setting(
     value: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
-        let _ = record_audit(&state, &module_id, "SET_SETTING_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataWrite) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataWrite. Error: {}", e)), "WARN");
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "SET_SETTING", Some(format!("Key: {}", key)), "INFO");
+    let _ = record_audit(&state, &module_id, "settings:changed", Some(format!("Key: {}", key)), "INFO");
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
 
@@ -69,12 +69,10 @@ pub fn list_settings(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<SettingEntry>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ListSettings) {
-        let _ = record_audit(&state, &module_id, "LIST_SETTINGS_DENIED", Some(e.clone()), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataRead) {
+        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataRead. Error: {}", e)), "WARN");
         return Err(e);
     }
-
-    let _ = record_audit(&state, &module_id, "LIST_SETTINGS", None, "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
