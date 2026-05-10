@@ -43,11 +43,11 @@ pub fn load_workspace_state(
 
 #[command]
 pub fn toggle_focus_mode(
-    module_id: String,
+    _module_id: String,
     state: State<'_, AppState>,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::SetSetting)?;
+    state.permission_guard.assert_capability(&_module_id, Permission::SetSetting)?;
 
     let mut workspace = state.workspace.lock().unwrap();
     workspace.focus_mode = !workspace.focus_mode;
