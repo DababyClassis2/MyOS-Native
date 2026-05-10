@@ -1,5 +1,6 @@
 use tauri::{command, State};
 use crate::state::{AppState, Permission};
+use crate::commands::logs::record_audit;
 use serde::{Serialize, Deserialize};
 
 #[command]
@@ -8,7 +9,10 @@ pub fn get_setting(
     key: String,
     state: State<'_, AppState>,
 ) -> Result<Option<String>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::GetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSetting) {
+        let _ = record_audit(&state, &module_id, "GET_SETTING_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+        return Err(e);
+    }
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
@@ -65,7 +69,12 @@ pub fn list_settings(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<SettingEntry>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::ListSettings)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ListSettings) {
+        let _ = record_audit(&state, &module_id, "LIST_SETTINGS_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
+
+    let _ = record_audit(&state, &module_id, "LIST_SETTINGS", None, "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();

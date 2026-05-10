@@ -1,14 +1,20 @@
 use tauri::{command, State, AppHandle, Manager};
 use crate::state::{AppState, Permission};
+use crate::commands::logs::record_audit;
 
 #[command]
 pub fn save_workspace_state(
-    _module_id: String,
+    module_id: String,
     key: String,
     value: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    // ... logic ...
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "SAVE_WORKSPACE_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+        return Err(e);
+    }
+
+    let _ = record_audit(&state, &module_id, "SAVE_WORKSPACE", Some(format!("Key: {}", key)), "INFO");
     let db = state.db.lock().unwrap();
     db.execute(
         "INSERT INTO workspace_state (key, value) VALUES (?, ?)
@@ -25,7 +31,10 @@ pub fn load_workspace_state(
     key: String,
     state: State<'_, AppState>,
 ) -> Result<Option<String>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::GetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSetting) {
+        let _ = record_audit(&state, &module_id, "LOAD_WORKSPACE_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+        return Err(e);
+    }
 
     let db = state.db.lock().unwrap();
     let mut stmt = db.prepare("SELECT value FROM workspace_state WHERE key = ?")
@@ -59,11 +68,6 @@ pub fn toggle_focus_mode(
     let _ = record_audit(&state, &module_id, "TOGGLE_FOCUS", Some(format!("Active: {}", is_active)), "INFO");
     
     // Emit event to all windows
-    app_handle.emit_all("workspace:focus_mode_changed", is_active).map_err(|e| e.to_string())?;
-
-    Ok(is_active)
-}
-windows
     app_handle.emit_all("workspace:focus_mode_changed", is_active).map_err(|e| e.to_string())?;
 
     Ok(is_active)

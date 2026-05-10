@@ -2,6 +2,7 @@ use tauri::{command, State};
 use sysinfo::{System, SystemExt, CpuExt, DiskExt, ProcessExt, PidExt};
 use serde::Serialize;
 use crate::state::{AppState, Permission};
+use crate::commands::logs::record_audit;
 
 #[derive(Serialize)]
 pub struct ProcessInfo {

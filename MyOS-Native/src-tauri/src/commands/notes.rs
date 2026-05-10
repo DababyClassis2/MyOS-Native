@@ -1,5 +1,6 @@
 use tauri::{command, State};
 use crate::state::{AppState, Permission};
+use crate::commands::logs::record_audit;
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 
@@ -16,7 +17,12 @@ pub fn list_notes(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<Note>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::ListNotes)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ListNotes) {
+        let _ = record_audit(&state, &module_id, "LIST_NOTES_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
+
+    let _ = record_audit(&state, &module_id, "LIST_NOTES", None, "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
@@ -47,7 +53,12 @@ pub fn save_note(
     note: Note,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    state.permission_guard.assert_capability(&module_id, Permission::SaveNote)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SaveNote) {
+        let _ = record_audit(&state, &module_id, "SAVE_NOTE_DENIED", Some(format!("Title: {}. Error: {}", note.title, e)), "WARN");
+        return Err(e);
+    }
+
+    let _ = record_audit(&state, &module_id, "SAVE_NOTE", Some(format!("Title: {}", note.title)), "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
@@ -95,7 +106,12 @@ pub fn search_notes(
     query: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<Note>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::SearchNotes)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SearchNotes) {
+        let _ = record_audit(&state, &module_id, "SEARCH_NOTES_DENIED", Some(format!("Query: {}. Error: {}", query, e)), "WARN");
+        return Err(e);
+    }
+
+    let _ = record_audit(&state, &module_id, "SEARCH_NOTES", Some(format!("Query: {}", query)), "INFO");
 
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
