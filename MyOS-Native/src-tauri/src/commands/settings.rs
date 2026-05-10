@@ -1,5 +1,6 @@
 use tauri::{command, State};
 use crate::state::{AppState, Permission};
+use serde::{Serialize, Deserialize};
 
 #[command]
 pub fn get_setting(
@@ -49,7 +50,7 @@ pub fn set_setting(
     Ok(())
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct SettingEntry {
     pub key: String,
     pub value: String,

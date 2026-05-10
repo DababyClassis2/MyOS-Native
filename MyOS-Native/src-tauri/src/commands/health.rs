@@ -1,5 +1,5 @@
 use tauri::{command, State};
-use sysinfo::{System, SystemExt, CpuExt, DiskExt, ProcessExt};
+use sysinfo::{System, SystemExt, CpuExt, DiskExt, ProcessExt, PidExt};
 use serde::Serialize;
 use crate::state::{AppState, Permission};
 
