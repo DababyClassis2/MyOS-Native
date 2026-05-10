@@ -1,5 +1,6 @@
 use tauri::{command, State};
 use crate::state::{AppState, Permission};
+use crate::commands::logs::record_audit;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -21,7 +22,10 @@ pub fn get_privacy_status(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<PrivacyStatus, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::GetSystemHealth)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSystemHealth) {
+        let _ = record_audit(&state, &module_id, "PRIVACY_STATUS_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
 
     Ok(PrivacyStatus {
         mac_randomized: true,
@@ -36,7 +40,10 @@ pub fn get_privacy_heatmap(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<DataExposure>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::GetSystemHealth)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSystemHealth) {
+        let _ = record_audit(&state, &module_id, "PRIVACY_HEATMAP_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
 
     Ok(vec![
         DataExposure { category: "Location".to_string(), risk_level: 0.1 },
@@ -49,10 +56,15 @@ pub fn get_privacy_heatmap(
 #[command]
 pub fn toggle_network_guardian(
     module_id: String,
-    _active: bool,
+    active: bool,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    state.permission_guard.assert_capability(&module_id, Permission::SetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "TOGGLE_GUARDIAN_DENIED", Some(format!("Active: {}. Error: {}", active, e)), "WARN");
+        return Err(e);
+    }
+
+    let _ = record_audit(&state, &module_id, "TOGGLE_GUARDIAN", Some(format!("Active: {}", active)), "INFO");
     // Implementation: Update iptables or proxy settings
     Ok(())
 }

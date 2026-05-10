@@ -1,5 +1,6 @@
 use tauri::{command, State};
 use crate::state::{AppState, Permission};
+use crate::commands::logs::record_audit;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -14,8 +15,13 @@ pub async fn query_assistant(
     prompt: String,
     state: State<'_, AppState>,
 ) -> Result<AIResponse, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::QueryAI)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::QueryAI) {
+        let _ = record_audit(&state, &module_id, "AI_QUERY_DENIED", Some(format!("Prompt: {}. Error: {}", prompt, e)), "WARN");
+        return Err(e);
+    }
 
+    let _ = record_audit(&state, &module_id, "AI_QUERY", Some(format!("Prompt: {}", prompt)), "INFO");
+    
     // 1. Verify Privacy Shield requirement
     // (Logic: AI only works if Privacy Shield is ACTIVE and no Network is detected)
     
@@ -28,7 +34,7 @@ pub async fn query_assistant(
 
 #[command]
 pub fn get_ai_status(
-    _module_id: String,
+    module_id: String,
     state: State<'_, AppState>,
 ) -> Result<bool, String> {
     // Check if AI is enabled in settings

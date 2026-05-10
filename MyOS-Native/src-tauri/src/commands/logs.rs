@@ -34,6 +34,26 @@ pub fn write_audit(
     Ok(())
 }
 
+/// Helper to write audit logs from internal Rust commands
+pub fn record_audit(
+    state: &AppState,
+    module_id: &str,
+    action: &str,
+    detail: Option<String>,
+    severity: &str,
+) -> Result<(), String> {
+    let db = state.db.lock().unwrap();
+    let profile_id = state.active_profile.lock().unwrap();
+
+    db.execute(
+        "INSERT INTO audit_log (module_id, action, detail, severity, profile_id, ts) 
+         VALUES (?, ?, ?, ?, ?, (unixepoch()))",
+        [module_id, action, &detail.unwrap_or_default(), severity, &*profile_id],
+    ).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[command]
 pub fn query_audit(
     module_id: String,

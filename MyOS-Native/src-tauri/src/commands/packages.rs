@@ -1,5 +1,6 @@
 use tauri::{command, State, AppHandle, Manager};
 use crate::state::{AppState, Permission};
+use crate::commands::logs::record_audit;
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
@@ -17,14 +18,19 @@ pub fn install_package(
     state: State<'_, AppState>,
     app_handle: AppHandle,
 ) -> Result<(), String> {
-    state.permission_guard.assert_capability(&module_id, Permission::SetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "INSTALL_PACKAGE_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
 
     // 1. Parse and validate manifest
     let manifest: YopsManifest = serde_json::from_str(&manifest_json).map_err(|e| e.to_string())?;
+    let _ = record_audit(&state, &module_id, "INSTALL_PACKAGE", Some(format!("ID: {}", manifest.id)), "INFO");
     
     // 2. Security Check: Reject permission escalation
     // (In a real app, we'd compare against a known dangerous list)
     if manifest.permissions.contains(&"RootAccess".to_string()) {
+        let _ = record_audit(&state, &module_id, "INSTALL_DENIED_ESCALATION", Some(format!("ID: {}", manifest.id)), "ERROR");
         return Err("Permission Escalation Denied".to_string());
     }
 
@@ -49,8 +55,12 @@ pub fn list_packages(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<YopsManifest>, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::GetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSetting) {
+        let _ = record_audit(&state, &module_id, "LIST_PACKAGES_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
 
+    let _ = record_audit(&state, &module_id, "LIST_PACKAGES", None, "INFO");
     let db = state.db.lock().unwrap();
     let mut stmt = db.prepare("SELECT manifest_json FROM packages").map_err(|e| e.to_string())?;
     

@@ -43,18 +43,27 @@ pub fn load_workspace_state(
 
 #[command]
 pub fn toggle_focus_mode(
-    _module_id: String,
+    module_id: String,
     state: State<'_, AppState>,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
-    state.permission_guard.assert_capability(&_module_id, Permission::SetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "TOGGLE_FOCUS_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
 
     let mut workspace = state.workspace.lock().unwrap();
     workspace.focus_mode = !workspace.focus_mode;
     
     let is_active = workspace.focus_mode;
+    let _ = record_audit(&state, &module_id, "TOGGLE_FOCUS", Some(format!("Active: {}", is_active)), "INFO");
     
     // Emit event to all windows
+    app_handle.emit_all("workspace:focus_mode_changed", is_active).map_err(|e| e.to_string())?;
+
+    Ok(is_active)
+}
+windows
     app_handle.emit_all("workspace:focus_mode_changed", is_active).map_err(|e| e.to_string())?;
 
     Ok(is_active)

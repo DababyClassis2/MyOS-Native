@@ -1,5 +1,6 @@
 use tauri::{command, State, AppHandle, Manager};
 use crate::state::{AppState, SessionMode, Permission};
+use crate::commands::logs::record_audit;
 use rusqlite::Connection;
 use crate::db;
 
@@ -11,13 +12,17 @@ pub fn set_session_mode(
     app_handle: AppHandle,
 ) -> Result<(), String> {
     // Only desktop can change session mode
-    state.permission_guard.assert_capability(&module_id, Permission::SetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "SET_SESSION_MODE_DENIED", Some(format!("Mode: {:?}. Error: {}", mode, e)), "WARN");
+        return Err(e);
+    }
 
     let mut current_mode = state.session_mode.lock().unwrap();
     if *current_mode == mode {
         return Ok(());
     }
 
+    let _ = record_audit(&state, &module_id, "SET_SESSION_MODE", Some(format!("New Mode: {:?}", mode)), "INFO");
     let mut db = state.db.lock().unwrap();
 
     match mode {

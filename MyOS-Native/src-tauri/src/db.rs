@@ -69,5 +69,16 @@ pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
         [],
     )?;
 
+    // 6. Packages Table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS packages (
+            id            TEXT    PRIMARY KEY NOT NULL,
+            manifest_json TEXT    NOT NULL,
+            enabled       INTEGER NOT NULL DEFAULT 1,
+            installed_at  INTEGER NOT NULL DEFAULT (unixepoch())
+        );",
+        [],
+    )?;
+
     Ok(())
 }

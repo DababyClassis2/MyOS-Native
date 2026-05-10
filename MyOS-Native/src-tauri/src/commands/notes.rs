@@ -78,8 +78,12 @@ pub fn delete_note(
     id: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    state.permission_guard.assert_capability(&module_id, Permission::DeleteNote)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DeleteNote) {
+        let _ = record_audit(&state, &module_id, "DELETE_NOTE_DENIED", Some(format!("ID: {}. Error: {}", id, e)), "WARN");
+        return Err(e);
+    }
 
+    let _ = record_audit(&state, &module_id, "DELETE_NOTE", Some(format!("ID: {}", id)), "INFO");
     let db = state.db.lock().unwrap();
     db.execute("DELETE FROM notes WHERE id = ?", [id]).map_err(|e| e.to_string())?;
     Ok(())

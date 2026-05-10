@@ -1,5 +1,6 @@
 use tauri::{command, State, AppHandle, Manager};
 use crate::state::{AppState, ThemePalette, Permission};
+use crate::commands::logs::record_audit;
 
 #[command]
 pub fn set_wallpaper(
@@ -8,8 +9,12 @@ pub fn set_wallpaper(
     state: State<'_, AppState>,
     app_handle: AppHandle,
 ) -> Result<ThemePalette, String> {
-    state.permission_guard.assert_capability(&module_id, Permission::SetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "SET_WALLPAPER_DENIED", Some(e.clone()), "WARN");
+        return Err(e);
+    }
 
+    let _ = record_audit(&state, &module_id, "SET_WALLPAPER", Some(format!("Path: {}", _path)), "INFO");
     // 1. Mock palette extraction (Phase 4 requirement)
     // In a full implementation, we'd use the `image` crate here.
     let palette = ThemePalette {

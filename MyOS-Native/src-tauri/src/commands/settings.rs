@@ -33,8 +33,12 @@ pub fn set_setting(
     value: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    state.permission_guard.assert_capability(&module_id, Permission::SetSetting)?;
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "SET_SETTING_DENIED", Some(format!("Key: {}. Error: {}", key, e)), "WARN");
+        return Err(e);
+    }
 
+    let _ = record_audit(&state, &module_id, "SET_SETTING", Some(format!("Key: {}", key)), "INFO");
     let db = state.db.lock().unwrap();
     let profile_id = state.active_profile.lock().unwrap();
 
