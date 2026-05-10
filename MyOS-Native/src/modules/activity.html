@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOS Activity Monitor</title>
+    <link rel="stylesheet" href="../assets/module-style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: rgba(30, 30, 30, 0.95);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        #activity-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2ecc71;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(46, 204, 113, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="traffic-lights">
+            <div class="traffic-light close" onclick="window.close()"></div>
+            <div class="traffic-light minimize"></div>
+            <div class="traffic-light maximize"></div>
+        </div>
+        <div class="title-text">Activity Monitor</div>
+    </div>
+
+    <div id="activity-content">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span>CPU Usage</span>
+                <span id="cpu-text">0.0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="cpu-fill" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span>Memory (RAM)</span>
+                <span id="mem-text">0 / 0 GB</span>
+            </div>
+            <div class="progress-bar">
+                <div id="mem-fill" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="stat-card" style="padding: 0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Process Name</th>
+                        <th>CPU %</th>
+                        <th>Memory (MB)</th>
+                    </tr>
+                </thead>
+                <tbody id="process-list">
+                    <!-- Processes will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        const moduleId = 'activity';
+
+        async function updateStats() {
+            try {
+                // In a real scenario, we might want a separate command for process list if it's too large,
+                // but for Phase 2, we'll assume get_system_health returns it or we expand it.
+                // Let's assume get_system_health returns process_list as well.
+                const stats = await invoke('get_system_health', { moduleId });
+                
+                // Update Bars
+                document.getElementById('cpu-text').innerText = `${stats.cpu_usage.toFixed(1)}%`;
+                document.getElementById('cpu-fill').style.width = `${stats.cpu_usage}%`;
+
+                const used = (stats.memory_used / 1024 / 1024 / 1024).toFixed(1);
+                const total = (stats.memory_total / 1024 / 1024 / 1024).toFixed(1);
+                const memPercent = (stats.memory_used / stats.memory_total) * 100;
+                
+                document.getElementById('mem-text').innerText = `${used} / ${total} GB`;
+                document.getElementById('mem-fill').style.width = `${memPercent}%`;
+
+                // Update Process List (If available)
+                if (stats.process_list) {
+                    const tbody = document.getElementById('process-list');
+                    tbody.innerHTML = stats.process_list.map(p => `
+                        <tr>
+                            <td>${p.name}</td>
+                            <td>${p.cpu_usage.toFixed(1)}%</td>
+                            <td>${(p.memory / 1024 / 1024).toFixed(1)} MB</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        setInterval(updateStats, 2000);
+        updateStats();
+    </script>
+</body>
+</html>

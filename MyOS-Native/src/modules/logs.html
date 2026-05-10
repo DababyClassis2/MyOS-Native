@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOS Audit Log</title>
+    <link rel="stylesheet" href="../assets/module-style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: rgba(20, 20, 20, 0.95);
+            color: #ffffff;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        #log-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            display: grid;
+            grid-template-columns: 150px 100px 150px 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .log-entry:hover { background: rgba(255, 255, 255, 0.03); }
+
+        .ts { color: #888; }
+        .module { color: var(--accent-color); font-weight: bold; }
+        .action { color: #fff; }
+        .detail { color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .severity-INFO { border-left: 3px solid #2ecc71; }
+        .severity-WARN { border-left: 3px solid #f1c40f; }
+        .severity-ERROR { border-left: 3px solid #e74c3c; }
+
+        .header-row {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: bold;
+            padding: 10px;
+            font-size: 13px;
+            display: grid;
+            grid-template-columns: 150px 100px 150px 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="traffic-lights">
+            <div class="traffic-light close" onclick="window.close()"></div>
+            <div class="traffic-light minimize"></div>
+            <div class="traffic-light maximize"></div>
+        </div>
+        <div class="title-text">Audit Log Viewer</div>
+    </div>
+
+    <div class="header-row">
+        <span>Timestamp</span>
+        <span>Module</span>
+        <span>Action</span>
+        <span>Details</span>
+    </div>
+
+    <div id="log-content">
+        <!-- Logs injected here -->
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        const moduleId = 'desktop'; // Usually desktop or system logs module
+
+        async function loadLogs() {
+            try {
+                // We'll use moduleId 'desktop' because it has QueryAudit permission
+                const logs = await invoke('query_audit', { moduleId, limit: 100 });
+                const content = document.getElementById('log-content');
+                content.innerHTML = logs.map(log => {
+                    const date = new Date(log.ts * 1000).toLocaleString();
+                    return `
+                        <div class="log-entry severity-${log.severity}">
+                            <span class="ts">${date}</span>
+                            <span class="module">${log.module_id}</span>
+                            <span class="action">${log.action}</span>
+                            <span class="detail" title="${log.detail || ''}">${log.detail || '-'}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        setInterval(loadLogs, 5000);
+        loadLogs();
+    </script>
+</body>
+</html>

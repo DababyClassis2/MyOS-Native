@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOS Privacy Heatmap</title>
+    <link rel="stylesheet" href="../assets/module-style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: rgba(15, 15, 15, 0.95);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        #privacy-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .privacy-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .status-label { font-weight: bold; color: #aaa; }
+        .status-value { color: var(--accent-color); font-family: monospace; }
+
+        .heatmap-item {
+            margin-bottom: 15px;
+        }
+
+        .heatmap-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .heatmap-bar {
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .heatmap-fill {
+            height: 100%;
+            transition: width 1s ease;
+        }
+
+        .risk-low { background: #2ecc71; }
+        .risk-med { background: #f1c40f; }
+        .risk-high { background: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="traffic-lights">
+            <div class="traffic-light close" onclick="window.close()"></div>
+            <div class="traffic-light minimize"></div>
+            <div class="traffic-light maximize"></div>
+        </div>
+        <div class="title-text">Privacy Heatmap</div>
+    </div>
+
+    <div id="privacy-content">
+        <div class="privacy-card">
+            <h3>Privacy Shield Status</h3>
+            <div class="status-row">
+                <span class="status-label">Network Guardian</span>
+                <span class="status-value" id="network-status">ACTIVE</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">MAC Address</span>
+                <span class="status-value" id="mac-status">RANDOMIZED</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">User Agent</span>
+                <span class="status-value" id="ua-status">MASKED</span>
+            </div>
+        </div>
+
+        <div class="privacy-card">
+            <h3>Data Exposure Risks</h3>
+            <div id="heatmap-list">
+                <!-- Heatmap items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        const moduleId = 'desktop';
+
+        async function loadPrivacyData() {
+            try {
+                const status = await invoke('get_privacy_status', { moduleId });
+                document.getElementById('network-status').innerText = status.network_guardian_active ? 'ACTIVE' : 'INACTIVE';
+                document.getElementById('mac-status').innerText = status.mac_randomized ? 'RANDOMIZED' : 'HARDWARE';
+                document.getElementById('ua-status').innerText = status.active_user_agent ? 'SCRUBBED' : 'DEFAULT';
+
+                const heatmap = await invoke('get_privacy_heatmap', { moduleId });
+                const list = document.getElementById('heatmap-list');
+                list.innerHTML = heatmap.map(item => {
+                    let riskClass = 'risk-low';
+                    if (item.risk_level > 0.3) riskClass = 'risk-med';
+                    if (item.risk_level > 0.7) riskClass = 'risk-high';
+
+                    return `
+                        <div class="heatmap-item">
+                            <div class="heatmap-header">
+                                <span>${item.category}</span>
+                                <span>${(item.risk_level * 100).toFixed(0)}% Risk</span>
+                            </div>
+                            <div class="heatmap-bar">
+                                <div class="heatmap-fill ${riskClass}" style="width: ${item.risk_level * 100}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        loadPrivacyData();
+        setInterval(loadPrivacyData, 10000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+[package]
+name = "yfitops-os"
+version = "8.0.0"
+description = "Yfitops OS v8.0 - Native Vision"
+authors = ["DanielMac"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-rc" }
+
+[dependencies]
+tauri = { version = "2.0.0-rc", features = ["protocol-asset"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sysinfo = "0.30"
+rusqlite = { version = "0.31", features = ["bundled"] } 
+# Note: 'bundled' is usually safer for musl targets to avoid system-wide libsqlite3-dev mismatch.
+chrono = "0.4"
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1.4", features = ["v4", "serde"] }
+
+[features]
+default = []

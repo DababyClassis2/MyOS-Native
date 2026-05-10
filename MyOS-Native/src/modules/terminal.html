@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOS Terminal</title>
+    <link rel="stylesheet" href="../assets/module-style.css">
+    <!-- Use XTerm.js for professional shell emulation -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <style>
+        body { margin: 0; background: #000; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #terminal-container { flex: 1; padding: 5px; }
+        .xterm .xterm-viewport { overflow-y: hidden !important; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="traffic-lights">
+            <div class="traffic-light close" onclick="window.close()"></div>
+            <div class="traffic-light minimize"></div>
+            <div class="traffic-light maximize"></div>
+        </div>
+        <div class="title-text">yos — terminal</div>
+    </div>
+    <div id="terminal-container"></div>
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        const moduleId = 'terminal';
+        
+        const term = new Terminal({ theme: { background: '#000', foreground: '#2ecc71' } });
+        term.open(document.getElementById('terminal-container'));
+        term.write('Yfitops OS v8.0 [Native Shell]\r\n$ ');
+
+        term.onData(async (data) => {
+            if (data === '\r') {
+                term.write('\r\n$ ');
+                // Logic to send current command to Rust exec_command
+                return;
+            }
+            term.write(data);
+        });
+    </script>
+</body>
+</html>

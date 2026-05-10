@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOS File Browser</title>
+    <link rel="stylesheet" href="../assets/module-style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: rgba(25, 25, 25, 0.95);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        #files-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #toolbar {
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #path-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            flex: 1;
+            margin: 0 10px;
+            font-size: 13px;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .file-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .file-name {
+            font-size: 12px;
+            text-align: center;
+            word-break: break-all;
+            max-width: 90px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn:hover { background: rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="traffic-lights">
+            <div class="traffic-light close" onclick="window.close()"></div>
+            <div class="traffic-light minimize"></div>
+            <div class="traffic-light maximize"></div>
+        </div>
+        <div class="title-text">Finder</div>
+    </div>
+
+    <div id="toolbar">
+        <button class="btn" onclick="goBack()">Back</button>
+        <input type="text" id="path-input" value="C:/" onkeydown="if(event.key==='Enter') navigate()">
+        <button class="btn" onclick="navigate()">Go</button>
+    </div>
+
+    <div id="files-content">
+        <div id="file-grid" class="file-grid">
+            <!-- Files injected here -->
+        </div>
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        const moduleId = 'files';
+        let currentPath = 'D:/My-Os-Project';
+
+        async function loadDir(path) {
+            try {
+                const entries = await invoke('list_dir', { moduleId, path });
+                const grid = document.getElementById('file-grid');
+                grid.innerHTML = entries.map(entry => `
+                    <div class="file-item" onclick="${entry.is_dir ? `openDir('${path}/${entry.name}')` : ''}">
+                        <div class="file-icon">${entry.is_dir ? '📂' : '📄'}</div>
+                        <div class="file-name">${entry.name}</div>
+                    </div>
+                `).join('');
+                currentPath = path;
+                document.getElementById('path-input').value = path;
+            } catch (err) {
+                alert("Error: " + err);
+            }
+        }
+
+        function openDir(path) {
+            // Clean up double slashes
+            const cleanPath = path.replace(/\/+/g, '/');
+            loadDir(cleanPath);
+        }
+
+        function navigate() {
+            const path = document.getElementById('path-input').value;
+            loadDir(path);
+        }
+
+        function goBack() {
+            const parts = currentPath.split('/');
+            if (parts.length > 1) {
+                parts.pop();
+                if (parts.length === 1 && parts[0] === '') parts[0] = '/';
+                loadDir(parts.join('/') || '/');
+            }
+        }
+
+        // Initialize with sandbox root
+        loadDir('D:/My-Os-Project'); 
+    </script>
+</body>
+</html>

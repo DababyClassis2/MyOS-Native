@@ -1,0 +1,13 @@
+pub mod window;
+pub mod health;
+pub mod terminal;
+pub mod files;
+pub mod settings;
+pub mod logs;
+pub mod notes;
+pub mod workspace;
+pub mod session;
+pub mod theme;
+pub mod packages;
+pub mod privacy;
+pub mod ai;

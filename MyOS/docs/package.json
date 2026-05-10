@@ -1,0 +1,14 @@
+{
+  "name": "yfitops-os",
+  "version": "1.0.0",
+  "description": "Yfitops OS - Browser-based Node.js OS",
+  "main": "gateway/shell.js",
+  "scripts": {
+    "start": "node gateway/shell.js"
+  },
+  "dependencies": {
+    "express": "^5.0.0",
+    "body-parser": "^1.20.0",
+    "morgan": "^1.10.0"
+  }
+}

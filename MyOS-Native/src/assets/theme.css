@@ -1,0 +1,19 @@
+/* 
+   Global Theme Assets: Geist Font & Phosphor Icons 
+   Implementation: Inlined for portability in a bare-metal OS shell.
+*/
+
+/* Geist Font Import */
+@import url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/style.css');
+
+:root {
+    --bg-color: rgba(15, 15, 15, 0.9);
+    --accent-color: #2ecc71;
+    --text-color: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Phosphor Icon Script Injection (for dynamic use) */
+/* <script src="https://unpkg.com/@phosphor-icons/web"></script> */

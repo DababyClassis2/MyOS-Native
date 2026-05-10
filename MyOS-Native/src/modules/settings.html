@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOS Settings</title>
+    <link rel="stylesheet" href="../assets/module-style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: rgba(35, 35, 35, 0.95);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        #settings-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .setting-group {
+            margin-bottom: 30px;
+        }
+
+        .setting-group h3 {
+            font-size: 14px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .setting-desc {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        select, input[type="text"] {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .toggle input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 2px; bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .footer {
+            padding: 20px;
+            display: flex;
+            justify-content: flex-end;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="traffic-lights">
+            <div class="traffic-light close" onclick="window.close()"></div>
+            <div class="traffic-light minimize"></div>
+            <div class="traffic-light maximize"></div>
+        </div>
+        <div class="title-text">System Settings</div>
+    </div>
+
+    <div id="settings-content">
+        <div class="setting-group">
+            <h3>Appearance</h3>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Accent Color</div>
+                    <div class="setting-desc">Primary color for icons and highlights</div>
+                </div>
+                <input type="text" id="accent-color" value="#2ecc71">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Glassmorphism Blur</div>
+                    <div class="setting-desc">Intensity of the background blur effect</div>
+                </div>
+                <select id="blur-level">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <h3>Privacy</h3>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Audit Logging</div>
+                    <div class="setting-desc">Record all system actions to the local log</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="audit-enabled" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Amnesic Mode</div>
+                    <div class="setting-desc">Wipe all session data on exit</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="amnesic-mode">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <button class="btn-primary" onclick="saveAll()">Apply Changes</button>
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        const moduleId = 'settings';
+
+        async function loadSettings() {
+            try {
+                const settings = await invoke('list_settings', { moduleId });
+                settings.forEach(s => {
+                    const el = document.getElementById(s.key);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = s.value === 'true';
+                        else el.value = s.value;
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveAll() {
+            const keys = ['accent-color', 'blur-level', 'audit-enabled'];
+            try {
+                // 1. Regular settings
+                for (const key of keys) {
+                    const el = document.getElementById(key);
+                    const value = el.type === 'checkbox' ? el.checked.toString() : el.value;
+                    await invoke('set_setting', { moduleId, key, value });
+                }
+
+                // 2. Session Mode (Special handling)
+                const amnesicEl = document.getElementById('amnesic-mode');
+                const targetMode = amnesicEl.checked ? 'Amnesic' : 'Sovereign';
+                await invoke('set_session_mode', { moduleId, mode: targetMode });
+
+                alert("Settings applied successfully!");
+            } catch (err) {
+                alert("Error: " + err);
+            }
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>
