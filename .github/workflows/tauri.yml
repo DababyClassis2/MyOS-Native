@@ -50,5 +50,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: myos-binary
-          path: MyOS-Native/src-tauri/target/release/yfitops-os
+          name: myos-appimage
+          path: MyOS-Native/src-tauri/target/release/bundle/appimage/*.AppImage
