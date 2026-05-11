@@ -51,4 +51,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: myos-appimage
+<<<<<<< HEAD
           path: MyOS-Native/src-tauri/target/release/bundle/appimage/*.AppImage
+=======
+          path: MyOS-Native/src-tauri/target/release/bundle/appimage/*.AppImage
+>>>>>>> 26874fa (Rev Working)

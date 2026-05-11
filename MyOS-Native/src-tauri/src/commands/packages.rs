@@ -18,26 +18,21 @@ pub fn install_package(
     state: State<'_, AppState>,
     app_handle: AppHandle,
 ) -> Result<(), String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::PackageInstall) {
-        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: PackageInstall. Error: {}", e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "INSTALL_PACKAGE_DENIED", Some(e.clone()), "WARN");
         return Err(e);
     }
 
     // 1. Parse and validate manifest
-    let manifest: YopsManifest = serde_json::from_str(&manifest_json).map_err(|e| {
-        let _ = record_audit(&state, &module_id, "security:invalid_manifest", Some(e.to_string()), "ERROR");
-        e.to_string()
-    })?;
+    let manifest: YopsManifest = serde_json::from_str(&manifest_json).map_err(|e| e.to_string())?;
+    let _ = record_audit(&state, &module_id, "INSTALL_PACKAGE", Some(format!("ID: {}", manifest.id)), "INFO");
     
     // 2. Security Check: Reject permission escalation
-    if manifest.permissions.contains(&"NetworkControl".to_string()) || 
-       manifest.permissions.contains(&"PackageInstall".to_string()) ||
-       manifest.permissions.contains(&"PrivacyControl".to_string()) {
-        let _ = record_audit(&state, &module_id, "security:escalation_attempt", Some(format!("Package ID: {}", manifest.id)), "ERROR");
-        return Err("Permission Escalation Denied: Third-party packages cannot request elevated permissions.".to_string());
+    // (In a real app, we'd compare against a known dangerous list)
+    if manifest.permissions.contains(&"RootAccess".to_string()) {
+        let _ = record_audit(&state, &module_id, "INSTALL_DENIED_ESCALATION", Some(format!("ID: {}", manifest.id)), "ERROR");
+        return Err("Permission Escalation Denied".to_string());
     }
-
-    let _ = record_audit(&state, &module_id, "packages:installed", Some(format!("ID: {}, Version: {}", manifest.id, manifest.version)), "INFO");
 
     // 3. Save to database
     let db = state.db.lock().unwrap();
@@ -60,17 +55,18 @@ pub fn list_packages(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<YopsManifest>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::DataRead) {
-        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: DataRead. Error: {}", e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSetting) {
+        let _ = record_audit(&state, &module_id, "LIST_PACKAGES_DENIED", Some(e.clone()), "WARN");
         return Err(e);
     }
 
+    let _ = record_audit(&state, &module_id, "LIST_PACKAGES", None, "INFO");
     let db = state.db.lock().unwrap();
     let mut stmt = db.prepare("SELECT manifest_json FROM packages").map_err(|e| e.to_string())?;
     
     let entries = stmt.query_map([], |row| {
         let json: String = row.get(0)?;
-        let manifest: YopsManifest = serde_json::from_str(&json).unwrap(); 
+        let manifest: YopsManifest = serde_json::from_str(&json).unwrap(); // Should handle error in production
         Ok(manifest)
     }).map_err(|e| e.to_string())?;
 

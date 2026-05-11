@@ -22,8 +22,8 @@ pub fn get_privacy_status(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<PrivacyStatus, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SystemMonitor) {
-        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: SystemMonitor. Error: {}", e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSystemHealth) {
+        let _ = record_audit(&state, &module_id, "PRIVACY_STATUS_DENIED", Some(e.clone()), "WARN");
         return Err(e);
     }
 
@@ -40,8 +40,8 @@ pub fn get_privacy_heatmap(
     module_id: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<DataExposure>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SystemMonitor) {
-        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: SystemMonitor. Error: {}", e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSystemHealth) {
+        let _ = record_audit(&state, &module_id, "PRIVACY_HEATMAP_DENIED", Some(e.clone()), "WARN");
         return Err(e);
     }
 
@@ -59,12 +59,12 @@ pub fn toggle_network_guardian(
     active: bool,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::PrivacyControl) {
-        let _ = record_audit(&state, &module_id, "security:permission_denied", Some(format!("Permission: PrivacyControl. Error: {}", e)), "WARN");
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::SetSetting) {
+        let _ = record_audit(&state, &module_id, "TOGGLE_GUARDIAN_DENIED", Some(format!("Active: {}. Error: {}", active, e)), "WARN");
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "settings:changed", Some(format!("Network Guardian: {}", active)), "INFO");
+    let _ = record_audit(&state, &module_id, "TOGGLE_GUARDIAN", Some(format!("Active: {}", active)), "INFO");
     // Implementation: Update iptables or proxy settings
     Ok(())
 }

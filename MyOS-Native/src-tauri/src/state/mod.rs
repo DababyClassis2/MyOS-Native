@@ -5,23 +5,21 @@ use rusqlite::Connection;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum Permission {
-    ExecRead,
-    ExecWrite,
-    FileRead,
-    FileWrite,
-    FileWatch,
-    ClipboardRead,
-    ClipboardWrite,
-    SystemMonitor,
-    NetworkRead,
-    NetworkControl,
-    AuditRead,
-    PackageInstall,
-    PrivacyControl,
-    // Internal orchestration permissions
+    ExecCommand,
+    ListDir,
+    ReadFile,
+    GetSystemHealth,
+    GetSetting,
+    SetSetting,
+    ListSettings,
+    ListNotes,
+    SaveNote,
+    DeleteNote,
+    SearchNotes,
     OpenModule,
-    DataRead,    // Covers GetSetting, ListNotes, etc.
-    DataWrite,   // Covers SetSetting, SaveNote, etc.
+    WriteAudit,
+    QueryAudit,
+    QueryAI,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -29,7 +27,6 @@ pub struct ModuleManifest {
     pub id: String,
     pub name: String,
     pub permissions: Vec<Permission>,
-    pub trusted: bool,
 }
 
 pub struct PermissionGuard {
@@ -42,112 +39,81 @@ impl PermissionGuard {
         let mut manifests = HashMap::new();
 
         // 1. Desktop Shell
-        manifests.insert("com.yfitops.desktop".to_string(), ModuleManifest {
-            id: "com.yfitops.desktop".to_string(),
+        manifests.insert("desktop".to_string(), ModuleManifest {
+            id: "desktop".to_string(),
             name: "Desktop Shell".to_string(),
             permissions: vec![
-                Permission::SystemMonitor,
+                Permission::GetSystemHealth,
                 Permission::OpenModule,
-                Permission::DataRead,
-                Permission::DataWrite,
-                Permission::AuditRead,
+                Permission::GetSetting,
+                Permission::SetSetting,
+                Permission::WriteAudit,
+                Permission::QueryAudit,
             ],
-            trusted: true,
         });
 
         // 2. Terminal
-        manifests.insert("com.yfitops.terminal".to_string(), ModuleManifest {
-            id: "com.yfitops.terminal".to_string(),
+        manifests.insert("terminal".to_string(), ModuleManifest {
+            id: "terminal".to_string(),
             name: "Terminal".to_string(),
             permissions: vec![
-                Permission::ExecWrite,
-                Permission::ExecRead,
-                Permission::AuditRead,
+                Permission::ExecCommand,
+                Permission::GetSystemHealth,
+                Permission::WriteAudit,
             ],
-            trusted: true,
         });
 
         // 3. Activity Monitor
-        manifests.insert("com.yfitops.monitor".to_string(), ModuleManifest {
-            id: "com.yfitops.monitor".to_string(),
+        manifests.insert("activity".to_string(), ModuleManifest {
+            id: "activity".to_string(),
             name: "Activity Monitor".to_string(),
-            permissions: vec![
-                Permission::SystemMonitor,
-                Permission::NetworkRead,
-            ],
-            trusted: true,
+            permissions: vec![Permission::GetSystemHealth, Permission::WriteAudit],
         });
 
         // 4. File Browser
-        manifests.insert("com.yfitops.files".to_string(), ModuleManifest {
-            id: "com.yfitops.files".to_string(),
+        manifests.insert("files".to_string(), ModuleManifest {
+            id: "files".to_string(),
             name: "File Browser".to_string(),
             permissions: vec![
-                Permission::FileRead,
-                Permission::FileWrite,
-                Permission::FileWatch,
-                Permission::ClipboardWrite,
+                Permission::ListDir,
+                Permission::ReadFile,
+                Permission::WriteAudit,
             ],
-            trusted: true,
         });
 
         // 5. Settings
-        manifests.insert("com.yfitops.settings".to_string(), ModuleManifest {
-            id: "com.yfitops.settings".to_string(),
+        manifests.insert("settings".to_string(), ModuleManifest {
+            id: "settings".to_string(),
             name: "Settings".to_string(),
             permissions: vec![
-                Permission::FileRead,
-                Permission::NetworkRead,
-                Permission::PrivacyControl,
-                Permission::DataRead,
-                Permission::DataWrite,
+                Permission::ListSettings,
+                Permission::GetSetting,
+                Permission::SetSetting,
+                Permission::WriteAudit,
             ],
-            trusted: true,
         });
 
         // 6. Notes
-        manifests.insert("com.yfitops.notes".to_string(), ModuleManifest {
-            id: "com.yfitops.notes".to_string(),
+        manifests.insert("notes".to_string(), ModuleManifest {
+            id: "notes".to_string(),
             name: "Notes".to_string(),
             permissions: vec![
-                Permission::FileRead,
-                Permission::ClipboardWrite,
-                Permission::DataRead,
-                Permission::DataWrite,
+                Permission::ListNotes,
+                Permission::SaveNote,
+                Permission::DeleteNote,
+                Permission::SearchNotes,
+                Permission::WriteAudit,
             ],
-            trusted: true,
         });
 
         // 7. Audit Logs
-        manifests.insert("com.yfitops.logs".to_string(), ModuleManifest {
-            id: "com.yfitops.logs".to_string(),
+        manifests.insert("logs".to_string(), ModuleManifest {
+            id: "logs".to_string(),
             name: "Audit Logs".to_string(),
             permissions: vec![
-                Permission::AuditRead,
+                Permission::QueryAudit,
+                Permission::WriteAudit,
             ],
-            trusted: true,
-        });
-
-        // 8. Package Manager
-        manifests.insert("com.yfitops.packages".to_string(), ModuleManifest {
-            id: "com.yfitops.packages".to_string(),
-            name: "Package Manager".to_string(),
-            permissions: vec![
-                Permission::PackageInstall,
-                Permission::FileRead,
-            ],
-            trusted: true,
-        });
-
-        // 9. Clipboard
-        manifests.insert("com.yfitops.clipboard".to_string(), ModuleManifest {
-            id: "com.yfitops.clipboard".to_string(),
-            name: "Clipboard".to_string(),
-            permissions: vec![
-                Permission::ClipboardRead,
-                Permission::ClipboardWrite,
-            ],
-            trusted: true,
         });
 
         PermissionGuard { 
@@ -157,7 +123,7 @@ impl PermissionGuard {
     }
 
     pub fn exec_whitelist(&self) -> Vec<String> {
-        vec!["ls".to_string(), "cat".to_string(), "pwd".to_string(), "whoami".to_string(), "hostname".to_string(), "date".to_string(), "uptime".to_string(), "free".to_string(), "df".to_string(), "ps".to_string()]
+        vec!["ls".to_string(), "dir".to_string(), "pwd".to_string(), "whoami".to_string(), "date".to_string(), "echo".to_string(), "ping".to_string()]
     }
 
     pub fn assert_capability(&self, module_id: &str, permission: Permission) -> Result<(), String> {
