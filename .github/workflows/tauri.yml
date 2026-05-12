@@ -27,10 +27,7 @@ jobs:
               musl-dev pkgconfig make \
               xdo openssl-dev
 
-            rustup target add x86_64-unknown-linux-musl
-
-            # Force pkg-config to find WebKit2GTK
-            export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-musl/pkgconfig/:/usr/lib/pkgconfig/
+            # NO 'rustup target add' needed. The musl target is already present.
             cd /workspace/MyOS-Native
             npm install
             npm run tauri build -- --target x86_64-unknown-linux-musl
