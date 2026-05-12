@@ -12,9 +12,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build inside Alpine 3.21 container
+      - name: Build inside Alpine 3.18 container
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace alpine:3.21 sh -c "
+          docker run --rm -v ${{ github.workspace }}:/workspace alpine:3.18 sh -c "
             set -ex
             apk update
             apk add --no-cache \
