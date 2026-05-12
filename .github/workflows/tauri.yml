@@ -40,7 +40,11 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install NPM dependencies
-        run: cd MyOS-Native && npm install
+        run: |
+          cd MyOS-Native
+          npm cache clean --force
+          rm -rf node_modules
+          npm install
 
       - name: Build Tauri
         run: cd MyOS-Native && npm run tauri build
