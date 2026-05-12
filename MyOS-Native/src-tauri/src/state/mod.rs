@@ -116,6 +116,26 @@ impl PermissionGuard {
             ],
         });
 
+        // 8. AI Assistant
+        manifests.insert("ai".to_string(), ModuleManifest {
+            id: "ai".to_string(),
+            name: "AI Assistant".to_string(),
+            permissions: vec![
+                Permission::QueryAI,
+                Permission::WriteAudit, // AI queries should be audited
+            ],
+        });
+
+        // 9. Theme Management
+        manifests.insert("theme".to_string(), ModuleManifest {
+            id: "theme".to_string(),
+            name: "Theme Management".to_string(),
+            permissions: vec![
+                Permission::SetSetting, // To allow setting wallpapers/themes
+                Permission::WriteAudit, 
+            ],
+        });
+
         PermissionGuard { 
             manifests,
             sandbox_root: std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")).to_string_lossy().to_string(),

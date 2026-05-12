@@ -37,7 +37,7 @@ pub async fn query_assistant(
 
 #[command]
 pub fn get_ai_status(
-    module_id: String,
+    _module_id: String,
     state: State<'_, AppState>,
 ) -> Result<bool, String> {
     // Check if AI is enabled in settings
@@ -50,6 +50,11 @@ pub fn get_ai_status(
     if let Some(row) = rows.next().map_err(|e| e.to_string())? {
         let val: String = row.get(0).map_err(|e| e.to_string())?;
         Ok(val == "true")
+    } else {
+        Ok(false) // Default: Disabled
+    }
+}
+rue")
     } else {
         Ok(false) // Default: Disabled
     }

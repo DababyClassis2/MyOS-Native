@@ -55,4 +55,4 @@ jobs:
           path: MyOS-Native/src-tauri/target/release/bundle/appimage/*.AppImage
 =======
           path: MyOS-Native/src-tauri/target/release/bundle/appimage/*.AppImage
->>>>>>> 26874fa (Rev Working)
+>>>>>>> 26874fa (Sidesss)
