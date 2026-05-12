@@ -21,8 +21,8 @@ jobs:
               rust cargo nodejs npm \
               libx11-dev libxrandr-dev \
               libxcb-dev gtk+3.0-dev \
-              webkit2gtk \
-              javascriptcoregtk \
+              webkit2gtk-4.0 \
+              javascriptcoregtk-4.0 \
               libsoup3-dev librsvg-dev \
               glib-dev dbus-dev gcc \
               musl-dev pkgconfig make \
