@@ -12,29 +12,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build inside official Rust Alpine image
+      - name: Build inside Alpine 3.19
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace rust:alpine sh -c "
+          docker run --rm -v ${{ github.workspace }}:/workspace alpine:3.19 sh -c "
             set -ex
             apk update
-            # Enable community repository and install correct Alpine packages
-            echo 'https://dl-cdn.alpinelinux.org/alpine/v3.23/community' >> /etc/apk/repositories
-            apk update
             apk add --no-cache \
-              nodejs npm \
+              rust cargo nodejs npm \
               libx11-dev libxrandr-dev \
               libxcb-dev gtk+3.0-dev \
               webkit2gtk-4.0 \
-              javascriptcoregtk-4.0 \
               libsoup3-dev librsvg-dev \
               glib-dev dbus-dev gcc \
               musl-dev pkgconfig make \
               xdo openssl-dev
 
             cd /workspace/MyOS-Native
-            # Tauri CLI needs to be installed
             npm install
-            npm install -g @tauri-apps/cli
             npm run tauri build -- --target x86_64-unknown-linux-musl
           "
 
