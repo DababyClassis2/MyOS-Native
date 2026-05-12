@@ -54,7 +54,7 @@ pub fn get_ai_status(
         Ok(false) // Default: Disabled
     }
 }
-rue")
+true")
     } else {
         Ok(false) // Default: Disabled
     }
