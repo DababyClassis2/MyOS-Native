@@ -25,10 +25,12 @@ jobs:
               libsoup3-dev librsvg-dev \
               glib-dev dbus-dev gcc \
               musl-dev pkgconfig make \
-              xdo
+              xdo openssl-dev
 
             rustup target add x86_64-unknown-linux-musl
 
+            # Force pkg-config to find WebKit2GTK
+            export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-musl/pkgconfig/:/usr/lib/pkgconfig/
             cd /workspace/MyOS-Native
             npm install
             npm run tauri build -- --target x86_64-unknown-linux-musl
