@@ -16,31 +16,20 @@ jobs:
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace alpine:latest sh -c "
             set -ex
-            # Install Alpine build dependencies
             apk update
             apk add --no-cache \
-              rust cargo \
-              nodejs npm \
-              libx11-dev \
-              libxrandr-dev \
-              libxdo-dev \
-              libxcb-dev \
-              gtk+3.0-dev \
-              webkit2gtk-dev \
-              libsoup-dev \
-              javascriptcoregtk-dev \
-              librsvg-dev \
-              glib-dev \
-              dbus-dev \
-              gcc \
-              musl-dev \
-              pkgconfig \
-              make
+              rust cargo nodejs npm \
+              libx11-dev libxrandr-dev \
+              libxcb-dev gtk+3.0-dev \
+              webkit2gtk-4.0-dev \
+              javascriptcoregtk-4.0-dev \
+              libsoup3-dev librsvg-dev \
+              glib-dev dbus-dev gcc \
+              musl-dev pkgconfig make \
+              libxdo
 
-            # Add musl target
             rustup target add x86_64-unknown-linux-musl
 
-            # Navigate and build
             cd /workspace/MyOS-Native
             npm install
             npm run tauri build -- --target x86_64-unknown-linux-musl
