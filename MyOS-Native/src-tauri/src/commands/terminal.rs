@@ -36,7 +36,7 @@ pub async fn exec_command(
         .output();
 
     #[cfg(not(target_os = "windows"))]
-    let output = Command::new("sh")
+    let output = Command::new("bash")
         .arg("-c")
         .arg(&command)
         .output();

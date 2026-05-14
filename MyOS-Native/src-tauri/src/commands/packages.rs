@@ -51,29 +51,57 @@ pub fn install_package(
 }
 
 #[command]
-pub fn list_packages(
+pub async fn search_system_packages(
     module_id: String,
+    query: String,
     state: State<'_, AppState>,
-) -> Result<Vec<YopsManifest>, String> {
-    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::GetSetting) {
-        let _ = record_audit(&state, &module_id, "LIST_PACKAGES_DENIED", Some(e.clone()), "WARN");
+) -> Result<String, String> {
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ExecCommand) {
         return Err(e);
     }
 
-    let _ = record_audit(&state, &module_id, "LIST_PACKAGES", None, "INFO");
-    let db = state.db.lock().unwrap();
-    let mut stmt = db.prepare("SELECT manifest_json FROM packages").map_err(|e| e.to_string())?;
-    
-    let entries = stmt.query_map([], |row| {
-        let json: String = row.get(0)?;
-        let manifest: YopsManifest = serde_json::from_str(&json).unwrap(); // Should handle error in production
-        Ok(manifest)
-    }).map_err(|e| e.to_string())?;
-
-    let mut results = Vec::new();
-    for entry in entries {
-        results.push(entry.map_err(|e| e.to_string())?);
+    // Safety: only allow alphanumeric queries
+    if !query.chars().all(|c| c.is_alphanumeric() || c == '-') {
+        return Err("Invalid search query".to_string());
     }
 
-    Ok(results)
+    let output = std::process::Command::new("apt-cache")
+        .args(["search", &query])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
+
+#[command]
+pub async fn install_system_package(
+    module_id: String,
+    package_name: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    if let Err(e) = state.permission_guard.assert_capability(&module_id, Permission::ExecCommand) {
+        return Err(e);
+    }
+
+    // Safety: package_name check
+    if !package_name.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Err("Invalid package name".to_string());
+    }
+
+    let _ = record_audit(&state, &module_id, "SYS_INSTALL_START", Some(package_name.clone()), "INFO");
+
+    let output = std::process::Command::new("sudo")
+        .args(["apt-get", "install", "-y", &package_name])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if output.status.success() {
+        let _ = record_audit(&state, &module_id, "SYS_INSTALL_SUCCESS", Some(package_name), "INFO");
+        Ok("Installation successful".to_string())
+    } else {
+        let err = String::from_utf8_lossy(&output.stderr).to_string();
+        let _ = record_audit(&state, &module_id, "SYS_INSTALL_FAILURE", Some(err.clone()), "ERROR");
+        Err(err)
+    }
+}
+

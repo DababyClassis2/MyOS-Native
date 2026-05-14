@@ -123,7 +123,13 @@ impl PermissionGuard {
     }
 
     pub fn exec_whitelist(&self) -> Vec<String> {
-        vec!["ls".to_string(), "dir".to_string(), "pwd".to_string(), "whoami".to_string(), "date".to_string(), "echo".to_string(), "ping".to_string()]
+        vec![
+            "ls".to_string(), "dir".to_string(), "pwd".to_string(), 
+            "whoami".to_string(), "date".to_string(), "echo".to_string(), 
+            "ping".to_string(), "grep".to_string(), "cat".to_string(), 
+            "apt".to_string(), "apt-get".to_string(), "ip".to_string(),
+            "df".to_string(), "free".to_string(), "uptime".to_string()
+        ]
     }
 
     pub fn assert_capability(&self, module_id: &str, permission: Permission) -> Result<(), String> {
