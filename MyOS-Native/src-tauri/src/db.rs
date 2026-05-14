@@ -8,13 +8,12 @@ pub fn init_db(path: &Path) -> Result<Connection> {
 }
 
 pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
-    // Enable Foreign Keys and WAL Mode
-    // Use 'pragma' or ignore results to avoid 'ExecuteReturnedResults'
-    let _ = conn.execute("PRAGMA foreign_keys = ON;", []);
-    let _ = conn.execute("PRAGMA journal_mode = WAL;", []);
+    // Use PRAGMA query for results to be absolutely safe
+    let _ = conn.query_row("PRAGMA foreign_keys = ON;", [], |_| Ok(()));
+    let _ = conn.query_row("PRAGMA journal_mode = WAL;", [], |_| Ok(()));
     
     // 1. Settings Table
-    conn.execute(
+    let _ = conn.execute(
         "CREATE TABLE IF NOT EXISTS settings (
             key        TEXT    NOT NULL,
             value      TEXT    NOT NULL,
@@ -23,10 +22,10 @@ pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
             PRIMARY KEY (key, profile_id)
         );",
         [],
-    )?;
+    );
 
     // 2. Audit Log Table
-    conn.execute(
+    let _ = conn.execute(
         "CREATE TABLE IF NOT EXISTS audit_log (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             ts         INTEGER NOT NULL DEFAULT (unixepoch()),
@@ -37,10 +36,10 @@ pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
             profile_id TEXT    NOT NULL DEFAULT 'default'
         );",
         [],
-    )?;
+    );
 
     // 3. Notes Table
-    conn.execute(
+    let _ = conn.execute(
         "CREATE TABLE IF NOT EXISTS notes (
             id         TEXT    PRIMARY KEY NOT NULL,
             title      TEXT    NOT NULL,
@@ -51,10 +50,9 @@ pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
             updated_at INTEGER NOT NULL DEFAULT (unixepoch())
         );",
         [],
-    )?;
+    );
 
     // 4. Notes FTS5 Virtual Table
-    // FTS5 might not be available in all sqlite builds, but rusqlite "bundled" usually has it.
     let _ = conn.execute(
         "CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
             title, body, content=notes, content_rowid=rowid
@@ -63,16 +61,16 @@ pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
     );
 
     // 5. Workspace State Table
-    conn.execute(
+    let _ = conn.execute(
         "CREATE TABLE IF NOT EXISTS workspace_state (
             key   TEXT PRIMARY KEY NOT NULL,
             value TEXT NOT NULL
         );",
         [],
-    )?;
+    );
 
     // 6. Packages Table
-    conn.execute(
+    let _ = conn.execute(
         "CREATE TABLE IF NOT EXISTS packages (
             id            TEXT    PRIMARY KEY NOT NULL,
             manifest_json TEXT    NOT NULL,
@@ -80,7 +78,7 @@ pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
             installed_at  INTEGER NOT NULL DEFAULT (unixepoch())
         );",
         [],
-    )?;
+    );
 
     Ok(())
 }
