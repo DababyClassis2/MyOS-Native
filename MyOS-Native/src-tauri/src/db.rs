@@ -9,8 +9,9 @@ pub fn init_db(path: &Path) -> Result<Connection> {
 
 pub fn init_db_in_conn(conn: &Connection) -> Result<()> {
     // Enable Foreign Keys and WAL Mode
-    conn.execute("PRAGMA foreign_keys = ON;", [])?;
-    conn.execute("PRAGMA journal_mode = WAL;", [])?;
+    // Use 'pragma' or ignore results to avoid 'ExecuteReturnedResults'
+    let _ = conn.execute("PRAGMA foreign_keys = ON;", []);
+    let _ = conn.execute("PRAGMA journal_mode = WAL;", []);
     
     // 1. Settings Table
     conn.execute(
