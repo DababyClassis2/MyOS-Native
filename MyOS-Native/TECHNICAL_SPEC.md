@@ -7,7 +7,7 @@
 ---
 
 ## 1. Executive Summary
-MyOS is a sovereign, privacy-first desktop shell designed to run as a native application on a minimal Linux base (Alpine musl). It replaces the traditional desktop environment with a compiled Rust gateway and an isolated, permission-gated WebView interface.
+MyOS is a sovereign, privacy-first desktop shell designed to run as a native application on a minimal Linux base (Debian glibc). It replaces the traditional desktop environment with a compiled Rust gateway and an isolated, permission-gated WebView interface.
 
 ---
 
@@ -22,8 +22,8 @@ MyOS is a sovereign, privacy-first desktop shell designed to run as a native app
 
 ## 3. System Architecture
 
-### Layer 1: OS Foundation (Alpine Linux)
-*   **Kernel:** Linux (musl libc).
+### Layer 1: OS Foundation (Debian Linux)
+*   **Kernel:** Linux (glibc).
 *   **Role:** Handles hardware, drivers, and basic process scheduling.
 *   **Deployment Target:** Bare-metal boot with MyOS as the `init` or primary shell.
 

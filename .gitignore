@@ -1,0 +1,13 @@
+# Build artifacts
+*.AppImage
+*.zip
+node_modules/
+target/
+
+# OS/System files
+.DS_Store
+Thumbs.db
+
+# Project specific
+YfitopsOS_Docs/
+yfitops-os_8.0.0_amd64.AppImage

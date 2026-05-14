@@ -218,7 +218,7 @@ Planned capabilities (not a commitment):
 
 **Goal:** Boot Yfitops OS on real hardware without a host OS.
 
-- [ ] Minimal Alpine Linux base (no GUI, no Xorg, no GNOME)
+- [ ] Minimal Debian Linux base (no GUI, no Xorg, no GNOME)
 - [ ] Custom init script (replaces systemd for boot)
 - [ ] Tauri app as the login shell replacement
 - [ ] Single-user mode by default

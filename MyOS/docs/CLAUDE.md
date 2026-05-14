@@ -11,7 +11,7 @@
 **Current Version:** v8.0 (Native Vision)  
 **Phase:** Phase 3 — Data Core  
 **Runtime:** Rust + Tauri v2 backend, Vanilla HTML/CSS/JS frontend  
-**Base OS:** Alpine Linux (musl) in VirtualBox → future bare-metal  
+**Base OS:** Debian Linux (glibc) in VirtualBox → future bare-metal  
 **Repository root:** `MyOS-Native/`
 
 ---

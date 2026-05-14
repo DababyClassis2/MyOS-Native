@@ -37,7 +37,7 @@ pub async fn query_assistant(
 
 #[command]
 pub fn get_ai_status(
-    _module_id: String,
+    module_id: String,
     state: State<'_, AppState>,
 ) -> Result<bool, String> {
     // Check if AI is enabled in settings
@@ -54,8 +54,3 @@ pub fn get_ai_status(
         Ok(false) // Default: Disabled
     }
 }
-//true")
-//    } else {
-//        Ok(false) // Default: Disabled
-//    }
-//}

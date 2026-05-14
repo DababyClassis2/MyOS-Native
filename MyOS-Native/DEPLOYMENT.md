@@ -1,23 +1,26 @@
-# DEPLOYMENT.md — Production Path: Bare-Metal Alpine Linux
+# DEPLOYMENT.md — Production Path: Bare-Metal Debian Linux
 
-This document outlines the final steps to package MyOS v8.0 for a dedicated Alpine Linux deployment.
+This document outlines the final steps to package MyOS v8.0 for a dedicated Debian Linux deployment.
 
 ---
 
 ## 1. Environment Preparation
-The build must be performed within an Alpine environment to ensure full musl libc compatibility.
+The build must be performed within an Debian environment to ensure full glibc compatibility.
+
+For a minimal Debian installation, it is recommended to use a netinst image or `debootstrap` to create a base system without a desktop environment. This ensures the smallest possible attack surface and resource footprint.
 
 ```bash
-# Install required build dependencies in Alpine
-apk add --no-cache \
+# Update and install required build dependencies in Debian
+apt-get update && apt-get install -y \
     curl \
-    build-base \
-    pkgconfig \
-    gtk+3.0-dev \
-    webkit2gtk-dev \
-    libsoup-dev \
-    javascriptcoregtk-dev \
-    librsvg-dev \
+    build-essential \
+    pkg-config \
+    libgtk-3-dev \
+    libwebkit2gtk-4.0-dev \
+    libsoup2.4-dev \
+    libjavascriptcoregtk-4.0-dev \
+    librsvg2-dev \
+    libssl-dev \
     cargo \
     nodejs \
     npm

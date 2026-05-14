@@ -37,7 +37,7 @@ Yfitops OS is a layered desktop operating system shell running as a native appli
 ├─────────────────────────────────────────────────────────────┤
 │  Data Layer — SQLite (sqlx) + AppState (Arc<Mutex<T>>)      │
 ├─────────────────────────────────────────────────────────────┤
-│  OS Kernel — Linux (Alpine musl) / future bare-metal        │
+│  OS Kernel — Linux (Debian glibc) / future bare-metal        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -45,8 +45,8 @@ Yfitops OS is a layered desktop operating system shell running as a native appli
 
 ## 3. Layer Descriptions
 
-### Layer 1 — Linux Kernel (Alpine musl)
-The operating system foundation. Yfitops OS does not implement a kernel. It runs on top of Alpine Linux (musl libc) in the current development phase. The target is bare-metal deployment on a minimal Linux install.
+### Layer 1 — Linux Kernel (Debian glibc)
+The operating system foundation. Yfitops OS does not implement a kernel. It runs on top of Debian Linux (glibc) in the current development phase. The target is bare-metal deployment on a minimal Linux install.
 
 Responsibilities:
 - Process scheduling and isolation
@@ -298,7 +298,7 @@ Windows Host (D:\Vm-Shared\import.txt)
         │
         │  VirtualBox shared folder
         ▼
-Alpine Linux VM (/mnt/shared/import.txt)
+Debian Linux VM (/mnt/shared/import.txt)
         │
         │  cp → tr -d '\r' → sh
         ▼
@@ -317,7 +317,7 @@ Tauri build → single native binary
         │
         │  installed to target machine
         ▼
-Bare-metal Alpine or custom Linux base
+Bare-metal Debian or custom Linux base
         │
         │  systemd service or init script
         ▼
